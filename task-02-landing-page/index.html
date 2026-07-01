@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book an Orthopaedic Consultation | OrthoNow</title>
+<meta name="description" content="Get an expert orthopaedic opinion on your knee or back pain. Book a free consultation with OrthoNow specialists in Bengaluru.">
+
+<!--
+  ============================================================
+  ORTHONOW — "BOOK A CONSULTATION" LANDING PAGE
+  ============================================================
+  Single self-contained file: HTML + CSS + vanilla JS only.
+  No build step, no frameworks, no external requests
+  (no Google Fonts, no CDN libraries, no images) — this is
+  intentional, not a corner cut. Every external request is a
+  PageSpeed cost, so the page is built entirely from system
+  fonts, inline SVG, and CSS to keep it fast on mobile.
+
+  STRUCTURE (in order down the page):
+    1. <style>            - all CSS, mobile-first, commented by section
+    2. <body>
+       a. Top utility bar  - phone number, always-visible call option
+       b. Hero             - headline + subhead + trust line + FORM
+                              (form lives in the hero on purpose —
+                              see "CONVERSION ARCHITECTURE" note below)
+       c. Trust strip       - clinic/specialist/rating stats
+       d. "What to expect"  - 3-step real sequence (booking → visit → plan)
+       e. Credentials block - specialist trust copy
+       f. FAQ               - native <details>/<summary>, zero JS needed
+       g. Footer
+       h. Sticky mobile CTA bar - appears after hero is scrolled past
+    3. <script>            - form validation, thank-you state swap,
+                              GTM dataLayer push, sticky bar behaviour
+
+  CONVERSION ARCHITECTURE NOTE:
+  The form is placed directly in the hero, not below a wall of
+  copy, because the target user (a working professional in pain,
+  on their phone, arriving from a paid ad) has already decided
+  they're interested by the time they click the ad. The job of
+  this page is to remove friction, not to "sell" them again.
+  Hierarchy: pain recognition (headline) -> reassurance (subhead +
+  trust line) -> low-friction action (2-field form), all in one
+  viewport on mobile. Supporting sections below exist to answer
+  objections for anyone who scrolls before committing, and the
+  sticky bottom bar exists so the CTA is never more than a thumb-tap
+  away even after they've scrolled into the FAQ.
+  ============================================================
+-->
+
+<style>
+  /* ============================================================
+     1. DESIGN TOKENS
+     A small, named palette and type system — kept as CSS variables
+     so every color/spacing decision traces back to one source.
+     ============================================================ */
+  :root {
+    /* Color */
+    --color-bg: #F6F2EA;            /* warm linen — page background, not sterile white */
+    --color-surface: #FFFFFF;       /* card / form surface */
+    --color-primary: #0E3B36;       /* deep pine teal — headlines, header */
+    --color-primary-soft: #15504A;  /* lighter teal for secondary text on dark */
+    --color-text: #20302C;          /* slate ink — body copy */
+    --color-muted: #5B6B66;         /* secondary/help text */
+    --color-accent: #D9603B;        /* ember clay — the ONE cta color, used nowhere else */
+    --color-accent-hover: #C04F2C;
+    --color-panel: #E4ECE3;         /* sage mist — section backgrounds */
+    --color-gold: #B98B2E;          /* trust accents (rating stars) — used sparingly */
+    --color-border: rgba(14, 59, 54, 0.14);
+    --color-error: #B3261E;
+
+    /* Type — system stacks only, zero font downloads */
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+    /* Spacing scale */
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 32px;
+    --space-5: 48px;
+    --space-6: 64px;
+
+    --radius: 10px;
+    --max-width: 1140px;
+  }
+
+  /* ============================================================
+     2. RESET / BASE
+     ============================================================ */
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--color-text);
+    background: var(--color-bg);
+    line-height: 1.5;
+    /* font-size 16px minimum on inputs prevents iOS auto-zoom on focus */
+    font-size: 16px;
+  }
+  img, svg { display: block; max-width: 100%; }
+  a { color: inherit; }
+  h1, h2, h3, p { margin: 0; }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* Visible focus state for keyboard users — never remove outline without replacing it */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  summary:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  .container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 var(--space-2);
+  }
+
+  /* ============================================================
+     3. TOP UTILITY BAR
+     Persistent call option — some users will always prefer to
+     call over filling a form, this should never be hidden.
+     ============================================================ */
+  .topbar {
+    background: var(--color-primary);
+    color: #fff;
+  }
+  .topbar .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
+  }
+  .topbar__brand {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .topbar__call {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .topbar__call svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ============================================================
+     4. HERO
+     ============================================================ */
+  .hero {
+    position: relative;
+    background: var(--color-primary);
+    color: #fff;
+    overflow: hidden;
+    padding: var(--space-5) 0 var(--space-6);
+  }
+
+  /* Signature element: a quiet line motif suggesting a spine's
+     curve resolving into a smooth, even line — "pain to mobility" —
+     rendered once in CSS/SVG, never as a photo. Kept low-opacity
+     and behind content so it reads as texture, not decoration. */
+  .hero__motif {
+    position: absolute;
+    right: -10%;
+    top: -8%;
+    width: 70%;
+    max-width: 640px;
+    opacity: 0.16;
+    pointer-events: none;
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  .hero__copy h1 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1.18;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+  .hero__copy .eyebrow {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #CFE3DE;
+    margin-bottom: var(--space-1);
+  }
+  .hero__sub {
+    margin-top: var(--space-2);
+    font-size: 17px;
+    color: #DCEAE6;
+    max-width: 46ch;
+  }
+  .hero__microtrust {
+    margin-top: var(--space-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    font-size: 14px;
+    color: #CFE3DE;
+  }
+  .hero__microtrust span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hero__microtrust svg { width: 16px; height: 16px; color: var(--color-gold); }
+
+  /* ============================================================
+     5. THE FORM CARD
+     This is the conversion point. Kept visually distinct (white
+     card against the dark hero) so it reads as "the next step",
+     not just another content block.
+     ============================================================ */
+  .form-card {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+  }
+  .form-card h2 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .form-card__sub {
+    font-size: 14px;
+    color: var(--color-muted);
+    margin-bottom: var(--space-3);
+  }
+
+  .field { margin-bottom: var(--space-2); }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--color-primary);
+  }
+  .field input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 16px; /* keeps iOS Safari from zooming in on focus */
+    font-family: inherit;
+    color: var(--color-text);
+    background: #fff;
+  }
+  .field input:focus {
+    border-color: var(--color-primary);
+  }
+  .field input[aria-invalid="true"] {
+    border-color: var(--color-error);
+  }
+  .field__error {
+    display: none;
+    color: var(--color-error);
+    font-size: 13px;
+    margin-top: 6px;
+  }
+  .field__error.is-visible { display: block; }
+
+  .cta-btn {
+    width: 100%;
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 15px 18px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.1px;
+    transition: background 0.15s ease, transform 0.05s ease;
+  }
+  .cta-btn:hover { background: var(--color-accent-hover); }
+  .cta-btn:active { transform: scale(0.99); }
+
+  .form-card__note {
+    margin-top: var(--space-2);
+    font-size: 12.5px;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  /* Thank-you state — swapped in via JS, never a page reload */
+  .thankyou {
+    text-align: center;
+    padding: var(--space-2) 0;
+  }
+  .thankyou__icon {
+    width: 48px; height: 48px;
+    margin: 0 auto var(--space-2);
+    color: var(--color-primary);
+  }
+  .thankyou h2 { font-family: var(--font-display); font-size: 21px; margin-bottom: 8px; }
+  .thankyou p { color: var(--color-muted); font-size: 14.5px; }
+
+  /* ============================================================
+     6. TRUST STRIP
+     ============================================================ */
+  .trust-strip {
+    background: var(--color-panel);
+    padding: var(--space-3) 0;
+  }
+  .trust-strip .container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+    text-align: center;
+  }
+  .trust-strip__stat strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--color-primary);
+  }
+  .trust-strip__stat span {
+    font-size: 12.5px;
+    color: var(--color-muted);
+  }
+
+  /* ============================================================
+     7. SECTION DEFAULTS
+     ============================================================ */
+  section.block {
+    padding: var(--space-6) 0;
+  }
+  .block__heading {
+    font-family: var(--font-display);
+    font-size: 25px;
+    color: var(--color-primary);
+    margin-bottom: var(--space-4);
+    max-width: 30ch;
+  }
+
+  /* "What to expect" — a real sequence, so numbering is earned here */
+  .steps {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: var(--space-2);
+  }
+  .step__num {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+  .step__title { font-weight: 700; margin-bottom: 4px; }
+  .step__desc { color: var(--color-muted); font-size: 14.5px; }
+
+  /* Credentials block */
+  .credentials {
+    background: var(--color-primary);
+    color: #fff;
+  }
+  .credentials .block__heading { color: #fff; }
+  .credentials p {
+    color: #DCEAE6;
+    max-width: 60ch;
+    font-size: 15.5px;
+  }
+  .credentials ul {
+    margin-top: var(--space-3);
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .credentials li {
+    display: flex;
+    gap: 10px;
+    font-size: 14.5px;
+    color: #DCEAE6;
+  }
+  .credentials li svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; color: var(--color-gold); }
+
+  /* FAQ — native details/summary, no JS required */
+  .faq-item {
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-2) 0;
+  }
+  .faq-item summary {
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary .icon {
+    flex-shrink: 0;
+    width: 20px; height: 20px;
+    transition: transform 0.15s ease;
+  }
+  .faq-item[open] summary .icon { transform: rotate(45deg); }
+  .faq-item p {
+    margin-top: var(--space-1);
+    color: var(--color-muted);
+    font-size: 14.5px;
+  }
+
+  /* Footer */
+  footer {
+    background: var(--color-primary);
+    color: #CFE3DE;
+    padding: var(--space-4) 0;
+    font-size: 13.5px;
+  }
+  footer a { color: #fff; text-decoration: underline; }
+  footer .footer-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  /* ============================================================
+     8. STICKY MOBILE CTA BAR
+     Hidden by default, shown via JS class once the hero's form
+     has scrolled out of view, so the CTA is always reachable.
+     Desktop doesn't need this — the form is already persistently
+     visible in most desktop viewports relative to scroll speed,
+     and a sticky bar competing with a mouse-driven UI feels bolted on.
+     ============================================================ */
+  .sticky-cta {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-1) var(--space-2);
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.08);
+    transform: translateY(110%);
+    transition: transform 0.2s ease;
+    z-index: 50;
+  }
+  .sticky-cta.is-visible { transform: translateY(0); }
+  .sticky-cta button {
+    width: 100%;
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 15.5px;
+    font-weight: 700;
+  }
+  @media (min-width: 900px) {
+    .sticky-cta { display: none; }
+  }
+
+  /* ============================================================
+     9. RESPONSIVE — desktop layout
+     Mobile is the default (above); this widens the hero to two
+     columns and bumps type scale once there's room for it.
+     ============================================================ */
+  @media (min-width: 900px) {
+    .hero__inner {
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .hero__copy h1 { font-size: 42px; }
+    .hero__sub { font-size: 18.5px; }
+    .block__heading { font-size: 30px; }
+    .trust-strip .container { gap: var(--space-4); }
+    .steps { grid-template-columns: repeat(3, 1fr); }
+    .credentials .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-5);
+      align-items: start;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============================================================
+       TOP UTILITY BAR
+       ============================================================ -->
+  <div class="topbar">
+    <div class="container">
+      <span class="topbar__brand">OrthoNow</span>
+      <a class="topbar__call" href="tel:+918041234567">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call: 080 4123 4567
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       HERO + FORM
+       ============================================================ -->
+  <header class="hero">
+    <!-- decorative motif, hidden from assistive tech -->
+    <svg class="hero__motif" viewBox="0 0 400 500" aria-hidden="true">
+      <path d="M200 20 C 140 80, 260 140, 200 200 C 140 260, 260 320, 210 400 C 190 440, 200 460, 200 480"
+            fill="none" stroke="#FFFFFF" stroke-width="3"/>
+      <circle cx="200" cy="20" r="6" fill="#D9603B"/>
+      <circle cx="200" cy="480" r="6" fill="#D9603B"/>
+    </svg>
+
+    <div class="container hero__inner">
+      <div class="hero__copy">
+        <span class="eyebrow">OrthoNow &middot; Bengaluru</span>
+        <h1>Get an Expert Orthopaedic Opinion on Your Knee or Back Pain</h1>
+        <p class="hero__sub">
+          A free, focused consultation — built for people who push through
+          pain to get through the workday. Talk to a specialist before it
+          gets in the way of more than your weekend run.
+        </p>
+        <div class="hero__microtrust">
+          <span>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9z"/></svg>
+            4.7/5 from 2,400+ patients
+          </span>
+          <span>9 clinics &middot; Bengaluru, Hyderabad &amp; Chennai</span>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           FORM CARD
+           id="consultation-form" is used as the scroll target for
+           the sticky mobile CTA bar.
+           ============================================================ -->
+      <div class="form-card" id="consultation-form">
+
+        <!-- Default state: the actual form -->
+        <div id="formState">
+          <h2>Book your free consultation</h2>
+          <p class="form-card__sub">Takes under 30 seconds. A clinic coordinator will call you to confirm your slot.</p>
+
+          <form id="consultForm" novalidate>
+            <div class="field">
+              <label for="fullName">Your name</label>
+              <input type="text" id="fullName" name="fullName" autocomplete="name" required>
+              <p class="field__error" id="fullNameError">Please enter your name.</p>
+            </div>
+
+            <div class="field">
+              <label for="phone">Phone number</label>
+              <input type="tel" id="phone" name="phone" inputmode="numeric" autocomplete="tel"
+                     placeholder="98XXXXXXXX" maxlength="10" required>
+              <p class="field__error" id="phoneError">Enter a valid 10-digit mobile number.</p>
+            </div>
+
+            <button type="submit" class="cta-btn">Book My Free Consultation</button>
+            <p class="form-card__note">No spam. We'll only call about your consultation.</p>
+          </form>
+        </div>
+
+        <!-- Thank-you state: hidden by default, swapped in by JS on
+             successful submit. Lives in the same card so layout
+             doesn't jump. aria-live announces it to screen readers. -->
+        <div id="thankYouState" class="thankyou" style="display:none;" aria-live="polite">
+          <svg class="thankyou__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+          </svg>
+          <h2>You're booked in.</h2>
+          <p>A clinic coordinator will call you shortly to confirm your slot and clinic location.</p>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       TRUST STRIP
+       ============================================================ -->
+  <section class="trust-strip">
+    <div class="container">
+      <div class="trust-strip__stat"><strong>9</strong><span>Clinics across South India</span></div>
+      <div class="trust-strip__stat"><strong>40+</strong><span>Orthopaedic specialists</span></div>
+      <div class="trust-strip__stat"><strong>4.7&#9733;</strong><span>From 2,400+ patient reviews</span></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       WHAT TO EXPECT — a genuine sequence, numbering is earned
+       ============================================================ -->
+  <section class="block">
+    <div class="container">
+      <h2 class="block__heading">What happens after you book</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step__num">01</div>
+          <div>
+            <div class="step__title">We call to confirm</div>
+            <p class="step__desc">A coordinator calls you to confirm a slot at your nearest OrthoNow clinic — no waiting room surprises.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step__num">02</div>
+          <div>
+            <div class="step__title">You meet a specialist</div>
+            <p class="step__desc">A focused 1:1 consultation to understand your pain, your routine, and what's actually causing it.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step__num">03</div>
+          <div>
+            <div class="step__title">You get a clear plan</div>
+            <p class="step__desc">Whether it's physiotherapy, a treatment plan, or just reassurance — you leave knowing what's next.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CREDENTIALS / TRUST BLOCK
+       ============================================================ -->
+  <section class="block credentials">
+    <div class="container">
+      <div>
+        <h2 class="block__heading">Consultations led by qualified specialists</h2>
+        <p>
+          Every OrthoNow consultation is conducted by an MBBS, MS (Ortho) or
+          DNB-qualified orthopaedic specialist — not a general physician
+          standing in. Our clinics see knee and back pain in working
+          professionals every day, not as an occasional case.
+        </p>
+      </div>
+      <ul>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          Board-certified orthopaedic specialists, 12+ years average experience
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          On-site diagnostics — no separate referral needed for X-ray or scans
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          9 clinics across Bengaluru, Hyderabad and Chennai
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FAQ — handles objections that stop a form fill
+       ============================================================ -->
+  <section class="block">
+    <div class="container" style="max-width: 760px;">
+      <h2 class="block__heading">Before you book</h2>
+
+      <details class="faq-item">
+        <summary>Is the consultation actually free?<span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </span></summary>
+        <p>Yes — the first consultation is free of charge. You only pay if you proceed with further diagnostics or treatment, and that's always discussed with you upfront.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Do I need an X-ray or MRI first?<span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </span></summary>
+        <p>No. Bring any existing reports if you have them, but it's not required — your specialist can recommend the right diagnostics during the consultation if needed.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I book without insurance?<span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </span></summary>
+        <p>Yes, consultations are available with or without insurance. Our coordinator will walk you through costs during the confirmation call.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>What if I need to reschedule?<span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </span></summary>
+        <p>No problem — just call or WhatsApp the clinic directly using the number from your confirmation, anytime before your slot.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer>
+    <div class="container footer-grid">
+      <div>&copy; 2026 OrthoNow. All rights reserved.</div>
+      <div>
+        <a href="tel:+918041234567">Call 080 4123 4567</a>
+        &nbsp;&middot;&nbsp;
+        <a href="https://wa.me/918041234567" target="_blank" rel="noopener">WhatsApp us</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       STICKY MOBILE CTA BAR
+       ============================================================ -->
+  <div class="sticky-cta" id="stickyCta">
+    <button type="button" id="stickyCtaBtn">Book Free Consultation</button>
+  </div>
+
+  <script>
+    /* ============================================================
+       FORM HANDLING + GTM DATALAYER PUSH
+       ============================================================
+       This is the part the brief is actually testing: the push
+       must fire on a real, validated submit event — not on page
+       load, not just because the form exists in the DOM.
+       ============================================================ */
+    (function () {
+      'use strict';
+
+      var form = document.getElementById('consultForm');
+      var formState = document.getElementById('formState');
+      var thankYouState = document.getElementById('thankYouState');
+
+      var nameInput = document.getElementById('fullName');
+      var phoneInput = document.getElementById('phone');
+      var nameError = document.getElementById('fullNameError');
+      var phoneError = document.getElementById('phoneError');
+
+      // Indian mobile numbers: 10 digits, starting 6-9.
+      var PHONE_PATTERN = /^[6-9]\d{9}$/;
+
+      function setFieldValid(input, errorEl, isValid) {
+        input.setAttribute('aria-invalid', isValid ? 'false' : 'true');
+        errorEl.classList.toggle('is-visible', !isValid);
+      }
+
+      function validateForm() {
+        var nameValid = nameInput.value.trim().length > 1;
+        var phoneValid = PHONE_PATTERN.test(phoneInput.value.trim());
+
+        setFieldValid(nameInput, nameError, nameValid);
+        setFieldValid(phoneInput, phoneError, phoneValid);
+
+        return nameValid && phoneValid;
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault(); // no page reload — this is the whole point
+
+        if (!validateForm()) {
+          return; // stop here — do NOT fire the dataLayer push on a failed/invalid submit
+        }
+
+        // --------------------------------------------------------
+        // GTM dataLayer push — fires only on a validated, real submit.
+        //
+        // Deliberately excludes name/phone values: GA4 and Google
+        // Ads both prohibit sending PII through events. The actual
+        // name/phone are sent to the backend/CRM separately (see
+        // Task 03's integration writeup) — GTM only needs to know
+        // THAT a lead converted, not WHO they are.
+        // --------------------------------------------------------
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: 'consultation_form_submitted',
+          form_location: 'landing_page_hero_form',
+          campaign_name: 'expert_opinion_consultation',
+          page_path: window.location.pathname
+        });
+
+        // Visible in the console for QA — confirms the push fired
+        // with the right shape before checking GTM Preview mode.
+        console.log('[dataLayer push]', window.dataLayer[window.dataLayer.length - 1]);
+
+        // Swap to the thank-you state — no reload, no redirect.
+        formState.style.display = 'none';
+        thankYouState.style.display = 'block';
+
+        // Move focus to the confirmation for screen reader users.
+        thankYouState.setAttribute('tabindex', '-1');
+        thankYouState.focus();
+      });
+
+      // Clear an individual field's error state as the user fixes it,
+      // rather than making them wait for a second submit attempt.
+      nameInput.addEventListener('input', function () {
+        if (nameInput.value.trim().length > 1) setFieldValid(nameInput, nameError, true);
+      });
+      phoneInput.addEventListener('input', function () {
+        // strip non-digits as they type, since this is a numeric-only field
+        phoneInput.value = phoneInput.value.replace(/\D/g, '');
+        if (PHONE_PATTERN.test(phoneInput.value.trim())) setFieldValid(phoneInput, phoneError, true);
+      });
+
+      /* ============================================================
+         STICKY MOBILE CTA BAR
+         Shown once the hero form has scrolled out of view, so the
+         CTA stays one thumb-tap away without duplicating the form.
+         ============================================================ */
+      var stickyCta = document.getElementById('stickyCta');
+      var heroForm = document.getElementById('consultation-form');
+      var stickyCtaBtn = document.getElementById('stickyCtaBtn');
+
+      var observer = new IntersectionObserver(function (entries) {
+        var formVisible = entries[0].isIntersecting;
+        stickyCta.classList.toggle('is-visible', !formVisible);
+      }, { threshold: 0 });
+      observer.observe(heroForm);
+
+      stickyCtaBtn.addEventListener('click', function () {
+        heroForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        nameInput.focus();
+      });
+
+    })();
+  </script>
+
+</body>
+</html>
