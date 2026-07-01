@@ -15,5 +15,3 @@ The form posts directly to a **backend endpoint I control** — a small serverle
 ## WhatsApp 2-minute SLA
 
 What could break it: Karix API rate limits or downtime, WAN latency during peak traffic, or the HubSpot call blocking the function before Karix is even attempted. Mitigation: fire the Karix call in parallel with (not after) the HubSpot write, with a 30-second timeout and one automatic retry; log every send attempt with a timestamp; and set up a monitoring alert (e.g. a scheduled check or Karix delivery webhook) that flags any message not confirmed sent within 90 seconds, so there's buffer before the SLA is breached.
-
-*(~362 words)*
