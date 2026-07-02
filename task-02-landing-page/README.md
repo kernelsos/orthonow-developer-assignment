@@ -4,7 +4,8 @@
 
 ## PageSpeed Insights — Mobile
 
-![PageSpeed Mobile Score]
+<img width="1915" height="958" alt="Screenshot 2026-07-01 134321" src="https://github.com/user-attachments/assets/21761c2f-e56e-4e44-8bb6-167b2d373840" />
+
 
 **Performance: 99** &nbsp;|&nbsp; Accessibility: 91 &nbsp;|&nbsp; Best Practices: 100 &nbsp;|&nbsp; SEO: 100
 
