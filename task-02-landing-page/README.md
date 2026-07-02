@@ -4,7 +4,7 @@
 
 ## PageSpeed Insights — Mobile
 
-![PageSpeed Mobile Score](./pagespeed-score.png)
+![PageSpeed Mobile Score](./Screenshot 2026-07-01 142343.png)
 
 **Performance: 99** &nbsp;|&nbsp; Accessibility: 91 &nbsp;|&nbsp; Best Practices: 100 &nbsp;|&nbsp; SEO: 100
 
