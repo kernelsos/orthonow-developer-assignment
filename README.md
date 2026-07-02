@@ -19,7 +19,7 @@ Written architecture for connecting the landing page form to HubSpot, WhatsApp (
 ---
 
 ## Loom walkthrough
-[Loom Recording Link]
+Loom Recording Link - https://www.loom.com/share/6f9837f282be44db94c3f93af6cabb9c
 
 ## Submitted by
 Gagan Sharma — 2nd July 2026
